@@ -33,18 +33,18 @@ import scala.Tuple2;
  * nc -lk 9999` and then run the example `$ bin/run-example
  * org.apache.spark.examples.streaming.JavaNetworkWordCount localhost 9999`
  */
-public final class JavaSensorData {
+public final class StreamSensorData {
 	private static final Pattern SPACER = Pattern.compile("\n");
 
 	@SuppressWarnings("serial")
 	public static void main(String[] args) throws Exception {
 		if (args.length < 2) {
-			System.err.println("Usage: JavaSensorData <hostname> <port>");
+			System.err.println("Usage: StreamSensorData <hostname> <port>");
 			System.exit(1);
 		}
 
 		// Create the context with a 1 second batch size
-		SparkConf sparkConf = new SparkConf().setAppName("JavaSensorData");
+		SparkConf sparkConf = new SparkConf().setAppName("StreamSensorData");
 		JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, Durations.seconds(5));
 
 		JavaReceiverInputDStream<String> lines = ssc.socketTextStream(args[0], Integer.parseInt(args[1]),
