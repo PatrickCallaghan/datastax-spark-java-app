@@ -20,17 +20,6 @@
       <groupId>com.datastax.dse</groupId>
       <artifactId>dse-spark-dependencies</artifactId>
       <version>5.1.5</version>
-      <scope>provided</scope>
-      <exclusions>
-        <exclusion>
-          <groupId>com.datastax.dse</groupId>
-          <artifactId>dse-java-driver-core</artifactId>
-        </exclusion>
-        <exclusion>
-          <groupId>org.apache.solr</groupId>
-          <artifactId>solr-solrj</artifactId>
-        </exclusion>
-      </exclusions>
     </dependency>
 		<dependency>
 			<groupId>joda-time</groupId>
