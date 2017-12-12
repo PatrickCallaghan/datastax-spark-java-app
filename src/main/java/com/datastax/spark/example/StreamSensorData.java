@@ -1,9 +1,7 @@
 package com.datastax.spark.example;
 
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 
@@ -23,20 +21,11 @@ import com.datastax.spark.connector.japi.CassandraJavaUtil;
 import scala.Tuple2;
 
 /**
- * Counts words in UTF8 encoded, '\n' delimited text received from the network
- * every second.
- *
- * Usage: JavaNetworkWordCount <hostname> <port> <hostname> and <port> describe
- * the TCP server that Spark Streaming would connect to receive data.
- *
- * To run this on your local machine, you need to first run a Netcat server `$
- * nc -lk 9999` and then run the example `$ bin/run-example
- * org.apache.spark.examples.streaming.JavaNetworkWordCount localhost 9999`
  */
 public final class StreamSensorData {
 	private static final Pattern SPACER = Pattern.compile("\n");
 
-	@SuppressWarnings("serial")
+	@SuppressWarnings({ "serial", "resource" })
 	public static void main(String[] args) throws Exception {
 		if (args.length < 2) {
 			System.err.println("Usage: StreamSensorData <hostname> <port>");
@@ -47,10 +36,7 @@ public final class StreamSensorData {
 		SparkConf sparkConf = new SparkConf().setAppName("StreamSensorData");
 		JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, Durations.seconds(5));
 
-		JavaReceiverInputDStream<String> lines = ssc.socketTextStream(args[0], Integer.parseInt(args[1]),
-				StorageLevels.MEMORY_AND_DISK_SER);
-
-		
+		JavaReceiverInputDStream<String> lines = ssc.socketTextStream("localhost", 9999);	
 		JavaDStream<String> readings = lines.flatMap(x -> Arrays.asList(SPACER.split(x)).iterator());
 		
 		JavaDStream<SensorReading> readingsPerSensor = readings.map(reading -> {
@@ -68,6 +54,7 @@ public final class StreamSensorData {
 		        CassandraJavaUtil.javaFunctions(sensorReadingRDD)
 		                .writerBuilder("datastax", "device_data", CassandraJavaUtil.mapToRow(SensorReading.class))
 		                .saveToCassandra();
+		        System.out.println("Saving to Cassandra");
 			}
 		});
 		
@@ -83,14 +70,14 @@ public final class StreamSensorData {
 		    	while (iterator.hasNext()){
 		    		SensorReading sr = iterator.next();
 		    		if (sr.getValue() > 650){
-		    			System.out.println("Trigger alert for " + sr.getId() + " " + sr.getValue());
+		    			System.out.println("Trigger alert for " + sr.getId() + " " + sr.getValue() + " " + sr.toString());
 		    		}
 		    	}
 		    }
 		});
 		
-		
 		ssc.start();
 		ssc.awaitTermination();
+		ssc.close();
 	}
 }

@@ -4,6 +4,9 @@ import java.io.IOException;
 import java.io.PrintWriter;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 import org.joda.time.DateTime;
 
@@ -14,35 +17,33 @@ public class NetCat {
 	public static void main(String args[]) {
 		ServerSocket serverSocket = null;
 		Socket clientSocket = null;
-		
+
 		try {
 			serverSocket = new ServerSocket(9999);
 			clientSocket = serverSocket.accept();
-			PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true);
-			DateTime time;
+			final PrintWriter out = new PrintWriter(clientSocket.getOutputStream(), true); 
+
+			ScheduledExecutorService scheduledExecutorService = Executors.newScheduledThreadPool(1);
 			
-			while (true) {
-				
-				time = DateTime.now();
-				
-				for (int i=0;i<NO_OF_DEVICES; i++){
-					String text = String.format("%d;%d;%tQ\n", i, new Double(Math.random()*20).intValue() + 10, time.getMillis());
-					System.out.print(text);
-					out.write(text);					
+			scheduledExecutorService.scheduleWithFixedDelay(new Runnable() {
+				@Override
+				public void run() {
+					DateTime time = DateTime.now();
+
+					for (int i = 0; i < NO_OF_DEVICES; i++) {
+						String text = String.format("%d;%d;%tQ\n", i, new Double(Math.random() * 20).intValue() + 10,
+								time.getMillis());
+						System.out.print(text);
+						out.write(text);
+					}
+
+					out.flush();
 				}
-			
-				out.flush();
-				Thread.sleep(1000);
-			}
+			}, 1, 1, TimeUnit.SECONDS);
+
+
 		} catch (Throwable e) {
 			e.printStackTrace();
-		} finally {
-			try {
-				serverSocket.close();
-				clientSocket.close();
-			} catch (IOException e) {
-				e.printStackTrace();
-			}			
 		}
 	}
 }

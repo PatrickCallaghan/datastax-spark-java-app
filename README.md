@@ -11,20 +11,20 @@ The contact points can take multiple points in the IP,IP,IP (no spaces).
 
 To create the a single node cluster with replication factor of 1 for standard localhost setup, run the following
 
-    mvn clean compile exec:java -Dexec.mainClass="com.datastax.demo.SchemaSetup"
+    cqlsh -f src/main/resources/cql/create_schema.cql
     
-To build the jar for spark 
+To build the jar for spark
 
 	mvn clean compile package
 
-To run locally 
+To run locally
 
 	~/dse-5.1.5/bin/dse spark-submit --class com.datastax.spark.example.StreamSensorData target/datastax-spark-java-app-0.1-SNAPSHOT.jar localhost 9999
 
-Run the NetCat class to produce data on the port 9999. 
+Run the NetCat class to produce data on the port 9999 
 
-	mvn clean compile exec:java -Dexec.mainClass="com.datastax.spark.example.NetCat"
+	mvn exec:java -Dexec.mainClass="com.datastax.spark.example.NetCat"
 	
 
-	
+
 	
