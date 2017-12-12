@@ -36,7 +36,7 @@ public final class StreamSensorData {
 		SparkConf sparkConf = new SparkConf().setAppName("StreamSensorData");
 		JavaStreamingContext ssc = new JavaStreamingContext(sparkConf, Durations.seconds(5));
 
-		JavaReceiverInputDStream<String> lines = ssc.socketTextStream("localhost", 9999);	
+		JavaReceiverInputDStream<String> lines = ssc.socketTextStream(args[0], Integer.parseInt(args[1]));	
 		JavaDStream<String> readings = lines.flatMap(x -> Arrays.asList(SPACER.split(x)).iterator());
 		
 		JavaDStream<SensorReading> readingsPerSensor = readings.map(reading -> {
@@ -59,7 +59,8 @@ public final class StreamSensorData {
 		});
 		
 		JavaPairDStream<String, SensorReading> pairs = readingsPerSensor.mapToPair(s -> new Tuple2<>(s.getId(), s));		
-		JavaPairDStream<String, SensorReading> windowed = pairs.reduceByKeyAndWindow((sr1, sr2) -> new SensorReading(sr1.getId(), sr1.getValue() + sr2.getValue(), sr1.getTime()), 
+		JavaPairDStream<String, SensorReading> windowed = pairs.reduceByKeyAndWindow((sr1, sr2) -> 
+				new SensorReading(sr1.getId(), sr1.getValue() + sr2.getValue(), sr1.getTime(), sr1.getCount() + sr2.getCount()),  
 				Durations.seconds(30), Durations.seconds(10));
 		
 		windowed.foreachRDD(new VoidFunction<JavaPairRDD<String, SensorReading>>() {
@@ -69,7 +70,10 @@ public final class StreamSensorData {
 		    	Iterator<SensorReading> iterator = map.values().iterator();
 		    	while (iterator.hasNext()){
 		    		SensorReading sr = iterator.next();
-		    		if (sr.getValue() > 650){
+		    		
+		    		double avg = sr.getValue()/sr.getCount();
+		    		
+		    		if (avg > 22){
 		    			System.out.println("Trigger alert for " + sr.getId() + " " + sr.getValue() + " " + sr.toString());
 		    		}
 		    	}
